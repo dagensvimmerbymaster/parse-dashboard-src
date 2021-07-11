@@ -60,6 +60,16 @@ let isValidJSON = (input) => {
   }
 }
 
+let isValidURL = (string) => {
+  var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+    '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+  return !!pattern.test(string);
+};
+
 let LocalizedMessageField = ({
   monospace,
   id,
@@ -189,6 +199,9 @@ class PushNew extends DashboardView {
     let payload = changes.data_type === 'json' ? JSON.parse(changes.data) : { alert: changes.data };
     if (changes.increment_badge) {
       payload.badge = 'Increment';
+    }
+    if (changes.data_url) {
+      payload.openUrl = data_url;
     }
 
     const push_time = extractPushTime(changes);
@@ -503,6 +516,18 @@ class PushNew extends DashboardView {
           placeholder={monospace ? '{\n  \u2026\n}' : 'Type your message\u2026'}
           value={fields.data}
           onChange={setField.bind(null, 'data')} />
+        } />,
+      <Field
+        key='message-url'
+        className={monospace ? styles.monospace : ''}
+        label={<Label text='What url would you like to send?' />}
+        input={<TextInput
+          multiline={false}
+          height={80}
+          monospace={monospace}
+          placeholder={monospace ? '{\n  \u2026\n}' : 'Type your url\u2026'}
+          value={fields.data_url}
+          onChange={setField.bind(null, 'data_url')} />
         } />
     ];
   }
@@ -760,6 +785,14 @@ class PushNew extends DashboardView {
         }
       }
 
+      // url is not an url
+      if (changes.data_url.trim() !== '') {
+        //invalidInputMessages.push(<span key='invalid-url'>Your <strong>url</strong> is not valid url.</span>);
+        if (!isValidURL(changes.data_url.trim())) {
+          invalidInputMessages.push(<span key='invalid-url'>Your <strong>url</strong> is not valid url.</span>);
+        }
+      }
+
       // localized message is empty
       if (changes.translation_enable) {
         this.state.localizedMessages.forEach((message) => {
@@ -856,6 +889,7 @@ class PushNew extends DashboardView {
         increment_badge: null, //if present - counts as true / existing ruby logic
         audience_id: this.state.initialAudienceId,
         data: '', //general message
+        data_url: '',
         data_type: 'text',
         data1: '', //message for group a
         data_type_1: 'text', //current implementation has control over differnt data types to each user

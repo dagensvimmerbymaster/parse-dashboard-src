@@ -71,6 +71,7 @@ export default class PushPreview extends React.Component {
         <div className={styles.title}>Message</div>
         <Row label='Message:' content={pushState.data} />
         {pushState.increment_badge ? <Row label='Badge:' content='Increment' /> : null}
+        {pushState.data_url ? <Row label='Url:' content={pushState.data_url} /> : null}
       </div>
     );
     if (isExperiment && pushState.exp_type === 'message') {

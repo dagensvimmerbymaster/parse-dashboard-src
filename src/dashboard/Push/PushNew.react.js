@@ -201,7 +201,7 @@ class PushNew extends DashboardView {
       payload.badge = 'Increment';
     }
     if (changes.data_url) {
-      payload.openUrl = data_url;
+      payload.openUrl = changes.data_url;
     }
 
     const push_time = extractPushTime(changes);

@@ -13,6 +13,7 @@ import Option             from 'components/Dropdown/Option.react';
 import React              from 'react';
 import { SpecialClasses } from 'lib/Constants';
 import TextInput          from 'components/TextInput/TextInput.react';
+import history            from 'dashboard/history';
 
 function validClassName(name) {
   return !!name.match(/^[a-zA-Z][_a-zA-Z0-9]*$/);
@@ -45,9 +46,9 @@ export default class CreateClassDialog extends React.Component {
 
   render() {
     let availableClasses = ['Custom'];
-    for (let raw in SpecialClasses) {
-      if (raw !== '_Session' && this.props.currentClasses.indexOf(raw) < 0) {
-        availableClasses.push(SpecialClasses[raw]);
+    for (let raw of SpecialClasses) {
+      if (raw !== '_Session' && !this.props.currentClasses.includes(raw)) {
+        availableClasses.push(raw);
       }
     }
 
@@ -68,10 +69,19 @@ export default class CreateClassDialog extends React.Component {
         disabled={!this.valid()}
         confirmText='Create class'
         cancelText={'Cancel'}
+        continueText={'Create class & add columns'}
         onCancel={this.props.onCancel}
-        onConfirm={() => {
+        showContinue={true}
+        onContinue={async () => {
           let type = this.state.type;
           let className = type === 'Custom' ? this.state.name : '_' + type;
+          await this.props.onConfirm(className);
+          history.push(`/apps/${this.props.currentAppSlug}/browser/${className}`);
+          this.props.onAddColumn();
+        }}
+        onConfirm={() => {
+          let type = this.state.type;
+          let className = type === 'Custom' ? this.state.name : type;
           this.props.onConfirm(className);
         }}>
         {availableClasses.length > 1 ?

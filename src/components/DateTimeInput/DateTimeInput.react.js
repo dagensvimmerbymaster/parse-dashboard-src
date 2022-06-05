@@ -83,7 +83,7 @@ export default class DateTimeInput extends React.Component {
           <strong>
             {this.props.value[getDateMethod(this.props.local, 'getHours')]()}:{(this.props.value[getDateMethod(this.props.local, 'getMinutes')]() < 10 ? '0' : '') + this.props.value[getDateMethod(this.props.local, 'getMinutes')]()}
           </strong>
-          {!this.props.local ? <span> UTC</span> : null}
+          {!this.props.local ? <span> CET</span> : null}
         </div>
       );
     }

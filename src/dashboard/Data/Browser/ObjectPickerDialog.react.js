@@ -98,6 +98,7 @@ export default class ObjectPickerDialog extends React.Component {
   }
 
   async fetchParseData(source, filters) {
+    const { useMasterKey } = this.props;
     const query = queryFromFilters(source, filters);
     const sortDir = this.state.ordering[0] === '-' ? '-' : '+';
     const field = this.state.ordering.substr(sortDir === '-' ? 1 : 0);
@@ -110,15 +111,16 @@ export default class ObjectPickerDialog extends React.Component {
 
     query.limit(MAX_ROWS_FETCHED);
 
-    let promise = query.find({ useMasterKey: true });
+    let promise = query.find({ useMasterKey });
 
     const data = await promise;
     return data;
   }
 
   async fetchParseDataCount(source, filters) {
+    const { useMasterKey } = this.props;
     const query = queryFromFilters(source, filters);
-    const count = await query.count({ useMasterKey: true });
+    const count = await query.count({ useMasterKey });
     return count;
   }
 
@@ -172,7 +174,8 @@ export default class ObjectPickerDialog extends React.Component {
     }
     query.limit(MAX_ROWS_FETCHED);
 
-    query.find({ useMasterKey: true }).then(nextPage => {
+    const { useMasterKey } = this.props;
+    query.find({ useMasterKey: useMasterKey }).then(nextPage => {
       if (className === this.props.className) {
         this.setState(state => ({
           data: state.data.concat(nextPage)
@@ -185,7 +188,7 @@ export default class ObjectPickerDialog extends React.Component {
   async updateFilters(filters) {
     const { selection } = this.state;
     const { className } = this.props;
-    await this.setState({
+    this.setState({
       filters: filters,
       selection: {}
     });
@@ -196,7 +199,7 @@ export default class ObjectPickerDialog extends React.Component {
   async updateOrdering(ordering) {
     const { className } = this.props;
     const { filters, selection } = this.state;
-    await this.setState({
+    this.setState({
       ordering: ordering,
       selection: {}
     });
@@ -212,7 +215,7 @@ export default class ObjectPickerDialog extends React.Component {
   async refresh() {
     const { className } = this.props;
     const { filters, selection } = this.state;
-    await this.setState({
+    this.setState({
       data: null,
       lastMax: -1,
       selection: {}

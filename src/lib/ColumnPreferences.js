@@ -73,9 +73,30 @@ export function getColumnSort(sortBy, appId, className) {
 
 export function getOrder(cols, appId, className, defaultPrefs) {
 
-  let prefs = getPreferences(appId, className) || [ { name: 'objectId', width: DEFAULT_WIDTH, visible: true } ];
+  let prefs = getPreferences(appId, className) || [ { name: 'objectId', width: DEFAULT_WIDTH, visible: true, cached: true } ];
+  
   if (defaultPrefs) {
-    prefs = defaultPrefs;
+
+    // Check that every default pref is in the prefs array.
+    defaultPrefs.forEach(defaultPrefsItem => {
+      // If the default pref is not in the prefs: Add it.
+      if (!prefs.find(prefsItem => defaultPrefsItem.name === prefsItem.name)) {
+        prefs.push(defaultPrefsItem);
+      }
+    });
+
+    // Iterate over the current prefs 
+    prefs = prefs.map((prefsItem) => {
+      // Get the default prefs item.
+      const defaultPrefsItem = defaultPrefs.find(defaultPrefsItem => defaultPrefsItem.name === prefsItem.name) || {};
+      // The values from the prefsItem object will overwrite those from the defaultPrefsItem object.
+      return {
+        // Set default width if not given.
+        width: DEFAULT_WIDTH,
+        ...defaultPrefsItem,
+        ...prefsItem,
+      }
+    });
   }
   let order = [].concat(prefs);
   let seen = {};
@@ -87,20 +108,33 @@ export function getOrder(cols, appId, className, defaultPrefs) {
   for (let name in cols) {
     requested[name] = true;
     if (!seen[name]) {
-      order.push({ name: name, width: DEFAULT_WIDTH, visible: !defaultPrefs });
+      order.push({ name: name, width: DEFAULT_WIDTH, visible: !defaultPrefs, required: cols[name]['required'], cached: !defaultPrefs });
       seen[name] = true;
       updated = true;
     }
   }
   let filtered = [];
   for (let i = 0; i < order.length; i++) {
-    const { name, visible } = order[i];
+    const { name, visible, required, cached } = order[i];
 
     // If "visible" attribute is not defined, sets to true
     // and updates the cached preferences.
     if (typeof visible === 'undefined') {
       order[i].visible = true;
+      order[i].cached = visible;
       updated = true;
+    }
+
+    // If "cached" attribute is not defined, set it to visible attr
+    // and updates the cached preferences.
+    if (typeof cached === 'undefined') {
+      order[i].cached = order[i].visible;
+      updated = true;
+    }
+
+    // If "required" attribute is not defined, set it to false
+    if (typeof required === 'undefined') {
+      order[i].required = false;
     }
     if (requested[name]) {
       filtered.push(order[i]);
@@ -114,6 +148,37 @@ export function getOrder(cols, appId, className, defaultPrefs) {
   return filtered;
 }
 
+export function updateCachedColumns(appId, className) {
+  let prefs = getPreferences(appId, className);
+  let order = [].concat(prefs);
+
+  for (let col of order) {
+    let { visible } = col;
+    col.cached = visible;
+  }
+  updatePreferences(order, appId, className);
+  return order;
+}
+
+export function setPointerDefaultKey( appId, className, name ) {
+  localStorage.setItem(pointerKeyPath(appId, className), name);
+  // remove old pointer key.
+  localStorage.removeItem(className);
+}
+
+export function getPointerDefaultKey( appId, className ) {
+  let pointerKey = localStorage.getItem(pointerKeyPath(appId, className));
+  if ( !pointerKey ) {
+    // old pointer key.
+    pointerKey = localStorage.getItem(className) || 'objectId';
+  }
+  return pointerKey;
+}
+
 function path(appId, className) {
   return `ParseDashboard:${VERSION}:${appId}:${className}`;
+}
+
+function pointerKeyPath( appId, className ) {
+  return `ParseDashboard:${VERSION}:${appId}:${className}::defaultPointerKey`;
 }

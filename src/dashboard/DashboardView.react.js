@@ -94,10 +94,17 @@ export default class DashboardView extends React.Component {
     }
     let pushSubsections = [];
 
+    // if (features.push && features.push.immediatePush) {
+    //   pushSubsections.push({
+    //     name: 'Send New Push',
+    //     link: '/push/new'
+    //   });
+    // }
+
     if (features.push && features.push.immediatePush) {
       pushSubsections.push({
         name: 'Send New Push',
-        link: '/push/new'
+        link: '/schedule/push'
       });
     }
 

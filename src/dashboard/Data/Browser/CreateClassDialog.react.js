@@ -71,7 +71,7 @@ export default class CreateClassDialog extends React.Component {
         onCancel={this.props.onCancel}
         onConfirm={() => {
           let type = this.state.type;
-          let className = type === 'Custom' ? this.state.name : '_' + type;
+          let className = type === 'Custom' ? this.state.name : type;
           this.props.onConfirm(className);
         }}>
         {availableClasses.length > 1 ?

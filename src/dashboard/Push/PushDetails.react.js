@@ -8,6 +8,7 @@
 import * as DateUtils         from 'lib/DateUtils';
 import * as PushHelper        from './PushComposerHelper.react';
 import * as SchemaStore       from 'lib/stores/SchemaStore';
+import Button                 from 'components/Button/Button.react'
 import Chart                  from 'components/Chart/Chart.react';
 import DashboardView          from 'dashboard/DashboardView.react';
 import DateTimeInput          from 'components/DateTimeInput/DateTimeInput.react';
@@ -69,6 +70,21 @@ let getSentInfo = (sendTime, expiration) => {
     return `Sent ${fmtSendTime} and expires ${fmtExpiration}`;
   } else {
     return `Sent ${fmtSendTime}`;
+  }
+}
+
+let getScheduledInfo = (sendTime, expiration) => {
+  //expiration unit is in seconds :(
+  if (!sendTime){
+    return '';
+  }
+
+  let fmtSendTime = getFormattedTime({time: sendTime});
+  let fmtExpiration = expiration ? getFormattedTime({time: expiration * 1000}) : null;
+  if (expiration){
+    return `Scheduled for ${fmtSendTime} and expires ${fmtExpiration}`;
+  } else {
+    return `Scheduled for ${fmtSendTime}`;
   }
 }
 
@@ -179,6 +195,10 @@ let getExperimentPartial = (pushDetails, type, isMessageType, style) => {
 
 let getPushDetailUrl = (context, pushId) => {
   return `/apps/${context.currentApp.slug}/push/${pushId}`;
+}
+
+let getPushListUrl = (context) => {
+  return `/apps/${context.currentApp.slug}/push/activity/all`;
 }
 
 let formatAnalyticsData = (data) => {
@@ -479,41 +499,39 @@ class PushDetails extends DashboardView {
       );
     }
 
-    if (pushDetails.is_exp) {
+    if (pushDetails.get('status') === 'scheduled') {
       res = (
         <div>
-          <div className={styles.groupHeader}>
-            {getExperimentPartial(pushDetails, 'a', isMessageType, { color: this.state.groupColorA })}
-            {getExperimentPartial(pushDetails, 'b', isMessageType, { color: this.state.groupColorB })}
+        <div className={styles.groupHeader}>
+          <div className={styles.headerTitle}>MESSAGE SCHEDULED</div>
+            {
+              (typeof alert === 'object') ?
+                <div>
+                  <div className={styles.headline}>{alert.title}</div>
+                  <div className={styles.headline}>{alert.body}</div>
+                </div>:
+                <div className={styles.headline}>{alert}</div>
+            }
+          <div className={styles.subline}>
+            {getScheduledInfo(pushDetails.get('pushTime'), pushDetails.get('expiration'))}
           </div>
-          {
-            !isMessageType ?
-              <div className={[styles.header, styles.messageHeader].join(' ')}>
-                <div className={styles.headerTitle}>MESSAGE SENT</div>
-                <div className={styles.headline}>{getMessage(pushDetails.group_a.payload)}</div>
-              </div> :
-              null
-          }
-          {prevLaunchGroup}
-          {experimentInfo}
-          <div className={styles.groupA}>
-            <div className={styles.openRateTitle} style={{ color: this.state.groupColorA }}>{this.state.groupStatusA}</div>
-            <PushOpenRate
-              numOpened={pushDetails.group_a.push_opens}
-              numSent={pushDetails.group_a.push_sends}
-              isWinner={launchChoice === 'A'}
-              customColor={this.state.groupColorA} />
-          </div>
-          <div className={styles.groupB}>
-            <div className={styles.openRateTitle} style={{ color: this.state.groupColorB }}>{this.state.groupStatusB}</div>
-            <PushOpenRate
-              numOpened={pushDetails.group_b.push_opens}
-              numSent={pushDetails.group_b.push_sends}
-              isWinner={launchChoice === 'B'}
-              customColor={this.state.groupColorB} />
-          </div>
+          <Button
+          value={'Delete this push'}
+          onClick={ async () => {
+            let query = new Parse.Query('_PushStatus');
+            var thisPush = await query.get(this.props.params.pushId, { useMasterKey: true })
+            await thisPush.destroy({ useMasterKey: true });
+            history.push(getPushListUrl(this.context))
+          }} />
         </div>
-      );
+        {prevLaunchGroup}
+        {experimentInfo}
+        <PushOpenRate
+            numOpened={pushDetails.get('numOpened') || 0}
+            numSent={pushDetails.get('numSent')}
+            customColor={this.state.standardColor} />
+      </div>
+      )
     } else {
       res = (
         <div>
@@ -540,6 +558,67 @@ class PushDetails extends DashboardView {
         </div>
       );
     }
+    // if (pushDetails.is_exp) {
+    //   res = (
+    //     <div>
+    //       <div className={styles.groupHeader}>
+    //         {getExperimentPartial(pushDetails, 'a', isMessageType, { color: this.state.groupColorA })}
+    //         {getExperimentPartial(pushDetails, 'b', isMessageType, { color: this.state.groupColorB })}
+    //       </div>
+    //       {
+    //         !isMessageType ?
+    //           <div className={[styles.header, styles.messageHeader].join(' ')}>
+    //             <div className={styles.headerTitle}>MESSAGE SENT</div>
+    //             <div className={styles.headline}>{getMessage(pushDetails.group_a.payload)}</div>
+    //           </div> :
+    //           null
+    //       }
+    //       {prevLaunchGroup}
+    //       {experimentInfo}
+    //       <div className={styles.groupA}>
+    //         <div className={styles.openRateTitle} style={{ color: this.state.groupColorA }}>{this.state.groupStatusA}</div>
+    //         <PushOpenRate
+    //           numOpened={pushDetails.group_a.push_opens}
+    //           numSent={pushDetails.group_a.push_sends}
+    //           isWinner={launchChoice === 'A'}
+    //           customColor={this.state.groupColorA} />
+    //       </div>
+    //       <div className={styles.groupB}>
+    //         <div className={styles.openRateTitle} style={{ color: this.state.groupColorB }}>{this.state.groupStatusB}</div>
+    //         <PushOpenRate
+    //           numOpened={pushDetails.group_b.push_opens}
+    //           numSent={pushDetails.group_b.push_sends}
+    //           isWinner={launchChoice === 'B'}
+    //           customColor={this.state.groupColorB} />
+    //       </div>
+    //     </div>
+    //   );
+    // } else {
+    //   res = (
+    //     <div>
+    //       <div className={styles.groupHeader}>
+    //         <div className={styles.headerTitle}>MESSAGE SENT</div>
+		// 					{
+		// 						(typeof alert === 'object') ?
+		// 							<div>
+		// 								<div className={styles.headline}>{alert.title}</div>
+		// 								<div className={styles.headline}>{alert.body}</div>
+		// 							</div>:
+		// 							<div className={styles.headline}>{alert}</div>
+		// 					}
+    //         <div className={styles.subline}>
+    //           {getSentInfo(pushDetails.get('pushTime'), pushDetails.get('expiration'))}
+    //         </div>
+    //       </div>
+    //       {prevLaunchGroup}
+    //       {experimentInfo}
+    //       <PushOpenRate
+    //         numOpened={pushDetails.get('numOpened') || 0}
+    //         numSent={pushDetails.get('numSent')}
+    //         customColor={this.state.standardColor} />
+    //     </div>
+    //   );
+    // }
 
     return res;
   }

@@ -34,6 +34,7 @@ import PushAudiencesIndex from './Push/PushAudiencesIndex.react';
 import PushDetails        from './Push/PushDetails.react';
 import PushIndex          from './Push/PushIndex.react';
 import PushNew            from './Push/PushNew.react';
+import PushScheduleNew    from './Push/PushScheduleNew.react';
 import PushSettings       from './Settings/PushSettings.react';
 import React              from 'react';
 import RestConsole        from './Data/ApiConsole/RestConsole.react';
@@ -297,17 +298,20 @@ export default class Dashboard extends React.Component {
           <Route path={ match.path + '/migration' } component={Migration} />
 
 
-          <Redirect exact from={ match.path + '/push' } to='/apps/:appId/push/new' />
+          {/* <Redirect exact from={ match.path + '/push' } to='/apps/:appId/push/new' /> */}
+          <Redirect exact from={match.path + '/push'} to='/apps/:appId/schedule/push/new' />
           <Redirect exact from={ match.path + '/push/activity' } to='/apps/:appId/push/activity/all'  />
+          <Redirect exact from={match.path + '/schedule/push'} to='/apps/:appId/schedule/push/new' />
 
           <Route path={ match.path + '/push/activity/:category' } render={(props) => (
             <PushIndex {...props} params={props.match.params} />
           )} />
           <Route path={ match.path + '/push/audiences' } component={PushAudiencesIndex} />
-          <Route path={ match.path + '/push/new' } component={PushNew} />
+          {/* <Route path={ match.path + '/push/new' } component={PushNew} /> */}
           <Route path={ match.path + '/push/:pushId' } render={(props) => (
             <PushDetails {...props} params={props.match.params} />
           )} />
+          <Route path={match.path + '/schedule/push/new'} component={PushScheduleNew} />
 
           {/* Unused routes... */}
           <Redirect exact from={ match.path + '/analytics' } to='/apps/:appId/analytics/overview' />

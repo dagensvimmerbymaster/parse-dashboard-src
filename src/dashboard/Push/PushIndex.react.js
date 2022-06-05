@@ -49,6 +49,7 @@ const PUSH_STATUS_COLOR = {
   failed: 'red',
   pending: 'blue',
   running: 'blue',
+  scheduled: 'blue',
 };
 
 const PUSH_STATUS_CONTENT = {
@@ -56,6 +57,7 @@ const PUSH_STATUS_CONTENT = {
   failed: 'FAILED',
   pending: 'SENDING',
   running: 'SENDING',
+  scheduled: 'SCHEDULED',
 };
 
 const EXPERIMENT_GROUP = {
@@ -293,7 +295,8 @@ export default class PushIndex extends DashboardView {
   }
 
   navigateToNew() {
-    history.push(this.context.generatePath('push/new'));
+    // history.push(this.context.generatePath('push/new'));
+    history.push(this.context.generatePath('schedule/push/new'));
   }
 
   navigateToDetails(objectId) {

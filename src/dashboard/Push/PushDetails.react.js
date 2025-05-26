@@ -770,6 +770,18 @@ class PushDetails extends DashboardView {
           legend='Choose a delivery time'
           description='We can send the campaign immediately, or any time in the next 2 weeks.'>
           {this.renderDeliveryContent(fields, setField)}
+
+          <Field
+            key="uri"
+            label={<Label text="Länk (valfritt)" description="Denna länk öppnas om användaren trycker på push-notisen." />}
+            input={
+              <TextInput
+                value={fields.uri}
+                onChange={setField.bind(null, 'uri')}
+                placeholder="https://exempel.se/artikel"
+              />
+            }
+          />
           <Field
             label={<Label text='Should this notification expire?' />}
             input={<Toggle value={fields.push_expires} onChange={setField.bind(null, 'push_expires')} />} />
@@ -795,11 +807,20 @@ class PushDetails extends DashboardView {
         </LoaderContainer>
         { isFlowView ?
           <FlowView
-            initialFields={{}}
+            initialFields={{
+              uri: '',
+            }}
             submitText='Send push'
             inProgressText={'Sending\u2026'}
-            onSubmit={({ changes }) => this.handlePushSubmit(changes)}
+            onSubmit={({ changes }) => {
+              const payload = { ...changes };
+              if (changes.uri) {
+                payload.uri = changes.uri;
+              }
+              return this.handlePushSubmit(payload);
+            }}
             initialChanges={{
+              uri: '',
               experiment_id: this.state.pushDetails.experiment_id,
               push_time_type: 'now',
               push_time: null,

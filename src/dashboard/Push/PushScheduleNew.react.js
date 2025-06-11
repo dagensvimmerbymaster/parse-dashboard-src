@@ -17,7 +17,7 @@ import Field                   from 'components/Field/Field.react';
 import Fieldset                from 'components/Fieldset/Fieldset.react';
 import FieldStyles             from 'components/Field/Field.scss';
 import FlowView                from 'components/FlowView/FlowView.react';
-import history                 from 'dashboard/history';
+// import history               from 'dashboard/history'; // BORTTAGEN!
 import joinWithFinal           from 'lib/joinWithFinal';
 import Label                   from 'components/Label/Label.react';
 import Option                  from 'components/Dropdown/Option.react';
@@ -243,11 +243,13 @@ class PushScheduleNew extends DashboardView {
       } else {
         //TODO: global success message banner for passing successful creation - store should also be cleared
         const PARSE_SERVER_SUPPORTS_PUSH_INDEX = false;
-        if (PARSE_SERVER_SUPPORTS_PUSH_INDEX) {
-          history.push(this.context.generatePath('push/activity'));
-        } else {
-          return;
-        }
+        // if (PARSE_SERVER_SUPPORTS_PUSH_INDEX) {
+        //   history.push(this.context.generatePath('push/activity'));
+        // } else {
+        //   return;
+        // }
+        // === FIX: Ta bort navigationen ===
+        return;
       }
     });
   }
@@ -405,30 +407,6 @@ class PushScheduleNew extends DashboardView {
         );
       }
     }
-
-    //TODO: disable user selection of invalid date or show error message in footer
-    // if (fields.push_time_type !== 'now' || (fields.exp_enable && fields.exp_type === 'time')) {
-    //   return deliveryContent.concat([
-    //     <Field
-    //       key='local_time'
-    //       label={<Label text='Use user time zone?' description='This will send the message to users in their local timezones.' />}
-    //       input={<Toggle
-    //         value={fields.local_time}
-    //         onChange={(value) => {
-    //           PushHelper.localTimeFormater(setField, 'push_time', fields.push_time_iso, value);
-    //           PushHelper.localTimeFormater(setField, 'push_time_1', fields.push_time_1_iso, value);
-    //           PushHelper.localTimeFormater(setField, 'push_time_2', fields.push_time_2_iso, value);
-    //           PushHelper.localTimeFormater(setField, 'expiration_time', fields.expiration_time_iso, value);
-    //           setField('local_time', value);
-    //         }} />
-    //       } />,
-    //     <SliderWrap key='slider' direction={Directions.DOWN} expanded={fields.local_time} block={true}>
-    //       <div className={styles.warning}>Installations without a time zone will not receive this campaign.</div>
-    //     </SliderWrap>
-    //   ]);
-    // } else {
-    //   return deliveryContent;
-    // }
     return deliveryContent;
   }
 
@@ -708,7 +686,6 @@ class PushScheduleNew extends DashboardView {
     </Fieldset> : null;
 
     const {push} = this.context.currentApp.serverInfo.features;
-    console.log(this.context.currentApp.serverInfo)
     const hasScheduledPushSupport = push && push.scheduledPush;
 
     const timeFieldsLegend = hasScheduledPushSupport ?
@@ -786,7 +763,6 @@ class PushScheduleNew extends DashboardView {
 
       // url is not an url
       if (changes.data_url.trim() !== '') {
-        //invalidInputMessages.push(<span key='invalid-url'>Your <strong>url</strong> is not valid url.</span>);
         if (!isValidURL(changes.data_url.trim())) {
           invalidInputMessages.push(<span key='invalid-url'>Your <strong>url</strong> is not valid url.</span>);
         }

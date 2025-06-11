@@ -12,15 +12,8 @@
   top: 96px;
   left: 300px;
   right: 0;
-  bottom: 0;
+  bottom: 36px;
   overflow: auto;
-  padding-top: 30px;
-  // fix for safari scrolling issue:
-  // https://css-tricks.com/forums/topic/safari-for-ios-z-index-ordering-bug-while-scrolling-a-page-with-a-fixed-element/
-  // only applying to safari as a side effect of this is emptystate component centering is off
-  &.safari {
-    -webkit-transform: translate3d(0,0,0);
-  }
 }
 
 body:global(.expanded) {
@@ -53,7 +46,7 @@ body:global(.expanded) {
   color: #ffffff;
   cursor: pointer;
   height: 14px;
-  padding: 0 8px;
+  padding: 0 12px;
 
   svg {
     vertical-align: middle;
@@ -88,9 +81,7 @@ body:global(.expanded) {
   top: 30px;
   bottom: 0;
   left: 0;
-  min-width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
+  width: 100%;
 }
 
 .table .empty {
@@ -256,4 +247,31 @@ body:global(.expanded) {
 .selectionInputWrapper {
   width: calc(100% - 280px);
   float: left;
+}
+
+.editRowDialogFileCell {
+  max-width: 100%;
+  padding: 25px;
+  span {
+    display: flex;
+    span {
+      width: 90%;
+    }
+    & a {
+      position: relative;
+    }
+  }
+} 
+
+.dataContainer {
+  height: 100%;
+  overflow: auto;
+}
+
+.noScroll {
+  overflow-x: hidden;
+}
+
+.confirmConfig {
+  padding: 10px 20px;
 }

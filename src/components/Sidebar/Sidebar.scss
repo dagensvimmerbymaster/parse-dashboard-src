@@ -53,9 +53,7 @@ $footerHeight: 36px;
   @include DosisFont;
   position: absolute;
   background: #05283c;
-  height: $footerHeight;
-  line-height: 18px;
-  padding: 9px 0;
+  padding: 10px 0;
   text-align: center;
   bottom: 0;
   left: 0;
@@ -65,11 +63,10 @@ $footerHeight: 36px;
     color: white;
     text-decoration: none;
     border-right: 1px solid #385261;
-    height: 18px;
-    line-height: 18px;
     font-size: 13px;
     padding: 0 12px;
     vertical-align: top;
+
 
     &:first-child {
       padding-left: 0;
@@ -78,10 +75,6 @@ $footerHeight: 36px;
       padding-right: 0;
       border: none;
     }
-  }
-
-  svg {
-    margin-top: -2px;
   }
 }
 
@@ -319,6 +312,8 @@ a.subitem {
   width: 75px;
   height: 100%;
   font-size: 10px;
+  display: flex;
+  align-items: center;
   float: left;
   margin-left: 6px;
   white-space: nowrap;
@@ -327,20 +322,23 @@ a.subitem {
   > *:first-child {
     position: absolute;
     letter-spacing: 2px;
-    line-height: 10px;
+    line-height: 12px;
     text-transform: uppercase;
   }
 
   > *:first-child {
-    top: 10px;
     transition: all 0.4s 0.16s cubic-bezier(0.77, 0, 0.175, 1);
   }
 }
 
 .more {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   svg {
     fill: #0C5582;
     transition: fill 0.2s ease-in;
+    margin-right: 4px;
   }
 
   &:hover {
@@ -363,16 +361,16 @@ a.subitem {
     content: '';
     position: absolute;
     bottom: -6px;
-    right: 11px;
+    right: 94px;
   }
 
   a {
     @include NotoSansFont;
     display: block;
-    height: 30px;
-    line-height: 31px;
+    height: 40px;
+    line-height: 41px;
     font-size: 13px;
-    text-align: right;
+    text-align: center;
     border-bottom: 1px solid #e0e0ea;
     color: $mainTextColor;
     padding-right: 8px;
@@ -381,12 +379,12 @@ a.subitem {
     }
 
     &:first-child {
-      border-radius: 5px 5px 0 0;
+      border-radius: 5px 5px 5px 5px;
     }
 
     &:last-child {
       border-bottom: 0;
-      border-radius: 0 0 5px 5px;
+      border-radius: 5px 5px 5px 5px;
     }
 
     .emoji{

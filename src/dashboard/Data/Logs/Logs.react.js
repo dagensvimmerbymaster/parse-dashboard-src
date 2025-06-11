@@ -5,23 +5,25 @@
  * This source code is licensed under the license found in the LICENSE file in
  * the root directory of this source tree.
  */
-import CategoryList  from 'components/CategoryList/CategoryList.react';
+import CategoryList from 'components/CategoryList/CategoryList.react';
 import DashboardView from 'dashboard/DashboardView.react';
-import EmptyState    from 'components/EmptyState/EmptyState.react';
-import LogView       from 'components/LogView/LogView.react';
-import LogViewEntry  from 'components/LogView/LogViewEntry.react';
-import React         from 'react';
-import ReleaseInfo   from 'components/ReleaseInfo/ReleaseInfo';
-import Toolbar       from 'components/Toolbar/Toolbar.react';
+import EmptyState from 'components/EmptyState/EmptyState.react';
+import LogView from 'components/LogView/LogView.react';
+import LogViewEntry from 'components/LogView/LogViewEntry.react';
+import React from 'react';
+import ReleaseInfo from 'components/ReleaseInfo/ReleaseInfo';
+import Toolbar from 'components/Toolbar/Toolbar.react';
 
-import styles        from 'dashboard/Data/Logs/Logs.scss';
+import styles from 'dashboard/Data/Logs/Logs.scss';
+import { withRouter } from 'lib/withRouter';
 
-let subsections = {
+const subsections = {
   info: 'Info',
-  error: 'Error'
+  error: 'Error',
 };
 
-export default class Logs extends DashboardView {
+@withRouter
+class Logs extends DashboardView {
   constructor() {
     super();
     this.section = 'Core';
@@ -29,26 +31,26 @@ export default class Logs extends DashboardView {
 
     this.state = {
       logs: undefined,
-      release: undefined
+      release: undefined,
     };
   }
 
   componentDidMount() {
-    this.fetchLogs(this.context.currentApp, this.props.params.type);
-    // this.fetchRelease(this.context.currentApp);
+    this.fetchLogs(this.context, this.props.params.type);
+    // this.fetchRelease(this.context);
   }
 
   componentWillReceiveProps(nextProps, nextContext) {
-    if (this.context !== nextContext) {
-      this.fetchLogs(nextContext.currentApp, nextProps.params.type);
-      // this.fetchRelease(nextContext.currentApp);
+    if (this.props.params.type !== nextProps.params.type) {
+      this.fetchLogs(nextContext, nextProps.params.type);
+      // this.fetchRelease(nextContext);
     }
   }
 
   fetchLogs(app, type) {
-    let typeParam = (type || 'INFO').toUpperCase();
+    const typeParam = (type || 'INFO').toUpperCase();
     app.getLogs(typeParam).then(
-      (logs) => this.setState({ logs }),
+      logs => this.setState({ logs }),
       () => this.setState({ logs: [] })
     );
   }
@@ -66,12 +68,16 @@ export default class Logs extends DashboardView {
   */
 
   renderSidebar() {
-    let current = this.props.params.type || '';
+    const current = this.props.params.type || '';
     return (
-      <CategoryList current={current} linkPrefix={'logs/'} categories={[
-        { name: 'Info', id: 'info' },
-        { name: 'Error', id: 'error' }
-      ]} />
+      <CategoryList
+        current={current}
+        linkPrefix={'logs/'}
+        categories={[
+          { name: 'Info', id: 'info' },
+          { name: 'Error', id: 'error' },
+        ]}
+      />
     );
   }
 
@@ -80,10 +86,10 @@ export default class Logs extends DashboardView {
     if (subsections[this.props.params.type]) {
       toolbar = (
         <Toolbar
-          section='Logs'
+          section="Logs"
           subsection={subsections[this.props.params.type]}
-          details={ReleaseInfo({ release: this.state.release })}>
-        </Toolbar>
+          details={ReleaseInfo({ release: this.state.release })}
+        ></Toolbar>
       );
     }
     let content = null;
@@ -93,21 +99,21 @@ export default class Logs extends DashboardView {
       content = (
         <div className={styles.empty}>
           <EmptyState
-            icon='files-outline'
-            title='No logs in the last 30 days'
-            description='When you start using Cloud Code, your logs will show up here.'
-            cta='Learn more'
-            action={() => window.location = 'http://docs.parseplatform.org/cloudcode/guide'} />
+            icon="files-outline"
+            title="No logs in the last 30 days"
+            description="When you start using Cloud Code, your logs will show up here."
+            cta="Learn more"
+            action={() => (window.location = 'http://docs.parseplatform.org/cloudcode/guide')}
+          />
         </div>
       );
     } else {
       content = (
         <div className={styles.content}>
           <LogView>
-            {this.state.logs.map(({ message, timestamp }) => <LogViewEntry
-              key={timestamp}
-              text={message}
-              timestamp={timestamp} />)}
+            {this.state.logs.map(({ message, timestamp }) => (
+              <LogViewEntry key={timestamp} text={message} timestamp={timestamp} />
+            ))}
           </LogView>
         </div>
       );
@@ -120,3 +126,5 @@ export default class Logs extends DashboardView {
     );
   }
 }
+
+export default Logs;

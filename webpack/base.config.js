@@ -7,85 +7,82 @@
  */
 //This file should be imported by another config file, like build.config.js
 
-var path = require('path');
-var SvgPrepPlugin = require('./plugins/svg-prep');
+const path = require('path');
+const SvgPrepPlugin = require('./plugins/svg-prep');
 
 // pulls in package.json and gets version
-var webpack = require('webpack');
-var fs = require('fs');
-var json = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-var version = json.version;
+const webpack = require('webpack');
+const fs = require('fs');
+const json = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const version = json.version;
 
 module.exports = {
   context: path.join(__dirname, '../src'),
   output: {
     filename: '[name].bundle.js',
     publicPath: 'bundles/',
-    assetModuleFilename: 'img/[hash][ext]'
+    assetModuleFilename: 'img/[hash][ext]',
   },
   resolve: {
-    modules: [__dirname,path.join(__dirname, '../src'), path.join(__dirname, '../node_modules')]
+    modules: [__dirname, path.join(__dirname, '../src'), path.join(__dirname, '../node_modules')],
   },
   resolveLoader: {
-    modules: [path.join(__dirname, '../node_modules')]
+    modules: [path.join(__dirname, '../node_modules')],
   },
   module: {
     rules: [
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            plugins: [['@babel/plugin-proposal-decorators', { 'legacy': true }], '@babel/transform-regenerator', '@babel/transform-runtime'],
-            presets: ['@babel/preset-react', '@babel/preset-env']
-          },
-        },
-      }, {
+        use: ['babel-loader'],
+      },
+      {
         test: /\.scss$/,
         use: [
           'style-loader',
           {
             loader: 'css-loader',
             options: {
-              modules: {
-                localIdentName: '[local]__[hash:base64:5]'
-              },
-              importLoaders: 2
+              modules: true,
+              importLoaders: 2,
             },
           },
           {
             loader: 'sass-loader',
             options: {
               sassOptions: {
-                includePaths: [path.resolve(__dirname, '../src')]
-              }
-            }
-          }
-        ]
-      }, {
+                includePaths: [path.resolve(__dirname, '../src')],
+              },
+            },
+          },
+        ],
+      },
+      {
         test: /\.css$/,
-        use: [ 'style-loader', 'css-loader' ]
-      }, {
+        use: ['style-loader', 'css-loader'],
+      },
+      {
         test: /\.png$/,
-        type: 'asset/resource'
-      }, {
+        type: 'asset/resource',
+      },
+      {
         test: /\.jpg$/,
-        type: 'asset/resource'
-      }, {
+        type: 'asset/resource',
+      },
+      {
         test: /\.flow$/,
-        use: 'null-loader'
-      }
-    ]
+        use: 'null-loader',
+      },
+    ],
   },
   plugins: [
     new SvgPrepPlugin({
-      source: path.join(__dirname,'../src', 'icons')
+      source: path.join(__dirname, '../src', 'icons'),
     }),
     new webpack.DefinePlugin({
       'process.env': {
-        'version' : JSON.stringify(version)
-      }
-    })
-  ]
+        version: JSON.stringify(version),
+      },
+    }),
+  ],
 };

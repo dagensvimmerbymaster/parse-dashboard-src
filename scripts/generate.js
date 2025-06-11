@@ -17,7 +17,7 @@ const pigDir = path.join(__dirname, '..', 'src','parse-interface-guide');
 const testDir = path.join(__dirname, '..', 'src','lib', 'tests');
 
 function padding(length) {
-  let space = [];
+  const space = [];
   for (let i = 0; i < length; i++) {
     space[i] = ' ';
   }
@@ -26,7 +26,7 @@ function padding(length) {
 
 function generateReact(name) {
   return (
-`/*
+    `/*
  * Copyright (c) 2016-present, Parse, LLC
  * All rights reserved.
  *
@@ -49,7 +49,7 @@ ${name}.propTypes = {
 
 function generateExample(name) {
   return (
-`/*
+    `/*
  * Copyright (c) 2016-present, Parse, LLC
  * All rights reserved.
  *
@@ -57,7 +57,7 @@ function generateExample(name) {
  * the root directory of this source tree.
  */
 import React${padding(name.length - 5)} from 'react';
-import ${name}${padding(5 - name.length)} f`+ 'rom' +` 'components/${name}/${name}.react';
+import ${name}${padding(5 - name.length)} f` + 'rom' + ` 'components/${name}/${name}.react';
 
 export const component = ${name};
 
@@ -74,7 +74,7 @@ export const demos = [
 
 function generateTest(name) {
   return (
-`/*
+    `/*
  * Copyright (c) 2016-present, Parse, LLC
  * All rights reserved.
  *
@@ -109,18 +109,18 @@ function updateComponentMap(name) {
   }
 
   let spaces = '';
-  for (let i = 0; i<numSpace; i++) {
+  for (let i = 0; i < numSpace; i++) {
     spaces += ' ';
   }
 
   return (
-`export let ${name}${spaces}= require('components/${name}/${name}.example');\n`
+    `export let ${name}${spaces}= require('components/${name}/${name}.example');\n`
   );
 }
 
 // Begin generation script
 
-let name = process.argv[2];
+const name = process.argv[2];
 
 if (!name) {
   console.log([
@@ -143,7 +143,7 @@ try {
   // If we don't error, the file exists
   console.log('Error: A component with that name already exists!');
   process.exit(1);
-} catch (e) {/**/}
+} catch {/**/}
 
 try {
   fs.mkdirSync(path.join(rootDir, name));
@@ -154,7 +154,7 @@ try {
   fs.appendFileSync(path.join(pigDir, 'ComponentsMap.js'), updateComponentMap(name));
 
   console.log(`Component ${name} created at ${path.join(rootDir, name)}.`);
-} catch (e) {
+} catch {
   console.log('Error: Failed to create files.');
   process.exit(1);
 }

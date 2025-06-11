@@ -3,13 +3,13 @@
 ---
 
 [![Build Status](https://github.com/parse-community/parse-dashboard/workflows/ci/badge.svg?branch=alpha)](https://github.com/parse-community/parse-dashboard/actions?query=workflow%3Aci+branch%3Aalpha)
+[![Build Status](https://github.com/parse-community/parse-dashboard/workflows/ci/badge.svg?branch=release)](https://github.com/parse-community/parse-dashboard/actions?query=workflow%3Aci+branch%3Arelease)
 [![Snyk Badge](https://snyk.io/test/github/parse-community/parse-dashboard/badge.svg)](https://snyk.io/test/github/parse-community/parse-dashboard)
 
-[![Node Version](https://img.shields.io/badge/nodejs-12,_14,_16-green.svg?logo=node.js&style=flat)](https://nodejs.org/)
+[![Node Version](https://img.shields.io/badge/nodejs-18,_20,_22-green.svg?logo=node.js&style=flat)](https://nodejs.org/)
 [![auto-release](https://img.shields.io/badge/%F0%9F%9A%80-auto--release-9e34eb.svg)](https://github.com/parse-community/parse-dashboard/releases)
 
 [![npm latest version](https://img.shields.io/npm/v/parse-dashboard/latest.svg)](https://www.npmjs.com/package/parse-dashboard)
-[![npm beta version](https://img.shields.io/npm/v/parse-dashboard/beta.svg)](https://www.npmjs.com/package/parse-dashboard)
 [![npm alpha version](https://img.shields.io/npm/v/parse-dashboard/alpha.svg)](https://www.npmjs.com/package/parse-dashboard)
 
 [![Backers on Open Collective](https://opencollective.com/parse-server/backers/badge.svg)][open-collective-link]
@@ -25,8 +25,11 @@ Parse Dashboard is a standalone dashboard for managing your [Parse Server](https
 ---
 
 - [Getting Started](#getting-started)
-- [Local Installation](#local-installation)
+  - [Compatibility](#compatibility)
+    - [Parse Server](#parse-server)
+    - [Node.js](#nodejs)
   - [Configuring Parse Dashboard](#configuring-parse-dashboard)
+    - [Options](#options)
     - [File](#file)
     - [Environment variables](#environment-variables)
       - [Multiple apps](#multiple-apps)
@@ -38,10 +41,13 @@ Parse Dashboard is a standalone dashboard for managing your [Parse Server](https
   - [Other Configuration Options](#other-configuration-options)
     - [Prevent columns sorting](#prevent-columns-sorting)
     - [Custom order in the filter popup](#custom-order-in-the-filter-popup)
+    - [Persistent Filters](#persistent-filters)
+    - [Scripts](#scripts)
 - [Running as Express Middleware](#running-as-express-middleware)
 - [Deploying Parse Dashboard](#deploying-parse-dashboard)
   - [Preparing for Deployment](#preparing-for-deployment)
   - [Security Considerations](#security-considerations)
+    - [Security Checks](#security-checks)
     - [Configuring Basic Authentication](#configuring-basic-authentication)
     - [Multi-Factor Authentication (One-Time Password)](#multi-factor-authentication-one-time-password)
     - [Separating App Access Based on User Identity](#separating-app-access-based-on-user-identity)
@@ -52,6 +58,18 @@ Parse Dashboard is a standalone dashboard for managing your [Parse Server](https
   - [Configuring Localized Push Notifications](#configuring-localized-push-notifications)
   - [Run with Docker](#run-with-docker)
 - [Features](#features)
+  - [Data Browser](#data-browser)
+    - [Filters](#filters)
+    - [Info Panel](#info-panel)
+      - [Segments](#segments)
+      - [Text Item](#text-item)
+      - [Key-Value Item](#key-value-item)
+      - [Table Item](#table-item)
+      - [Image Item](#image-item)
+      - [Video Item](#video-item)
+      - [Audio Item](#audio-item)
+      - [Button Item](#button-item)
+      - [Panel Item](#panel-item)
   - [Browse as User](#browse-as-user)
   - [Change Pointer Key](#change-pointer-key)
     - [Limitations](#limitations)
@@ -59,10 +77,6 @@ Parse Dashboard is a standalone dashboard for managing your [Parse Server](https
 - [Contributing](#contributing)
 
 # Getting Started
-
-[Node.js](https://nodejs.org) version >= 12 is required to run the dashboard. You also need to be using Parse Server version 2.1.4 or higher.
-
-# Local Installation
 
 Install the dashboard from `npm`.
 
@@ -90,7 +104,48 @@ After starting the dashboard, you can visit http://localhost:4040 in your browse
 
 ![Parse Dashboard](.github/dash-shot.png)
 
+## Compatibility
+
+### Parse Server
+Parse Dashboard is compatible with the following Parse Server versions.
+
+| Parse Dashboard Version | Parse Server Version | Compatible |
+|-------------------------|----------------------|------------|
+| >=1.0                   | >= 2.1.4             | ✅ Yes      |
+
+### Node.js
+Parse Dashboard is continuously tested with the most recent releases of Node.js to ensure compatibility. We follow the [Node.js Long Term Support plan](https://github.com/nodejs/Release) and only test against versions that are officially supported and have not reached their end-of-life date.
+
+| Version    | Latest Version | End-of-Life | Compatible |
+|------------|----------------|-------------|------------|
+| Node.js 18 | 18.20.4        | May 2025    | ✅ Yes      |
+| Node.js 20 | 20.18.0        | April 2026  | ✅ Yes      |
+| Node.js 22 | 22.9.0         | April 2027  | ✅ Yes      |
+
 ## Configuring Parse Dashboard
+
+### Options
+
+| Parameter                              | Type                | Optional | Default | Example                                          | Description                                                                                                                                                                                                                           |
+|----------------------------------------|---------------------|----------|---------|--------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `apps`                                 | Array&lt;Object&gt; | no       | -       | `[{ ... }, { ... }]`                             | The apps that are configured for the dashboard.                                                                                                                                                                                       |
+| `apps.appId`                           | String              | yes      | -       | `"myAppId"`                                      | The Application ID for your Parse Server instance.                                                                                                                                                                                    |
+| `apps.masterKey`                       | String \| Function  | yes      | -       | `"exampleMasterKey"`, `() => "exampleMasterKey"` | The master key for full access to Parse Server. It can be provided directly as a String or as a Function returning a String.                                                                                                          |
+| `apps.masterKeyTtl`                    | Number              | no       | -       | `3600`                                           | Time-to-live (TTL) for the master key in seconds. This defines how long the master key is cached before the `masterKey` function is re-triggered.                                                                                     |
+| `apps.serverURL`                       | String              | yes      | -       | `"http://localhost:1337/parse"`                  | The URL where your Parse Server is running.                                                                                                                                                                                           |
+| `apps.appName`                         | String              | no       | -       | `"MyApp"`                                        | The display name of the app in the dashboard.                                                                                                                                                                                         |
+| `infoPanel`                            | Array&lt;Object&gt; | yes      | -       | `[{ ... }, { ... }]`                             | The [info panel](#info-panel) configuration.                                                                                                                                                                                          |
+| `infoPanel[*].title`                   | String              | no       | -       | `User Details`                                   | The panel title.                                                                                                                                                                                                                      |
+| `infoPanel[*].classes`                 | Array&lt;String&gt; | no       | -       | `["_User"]`                                      | The classes for which the info panel should be displayed.                                                                                                                                                                             |
+| `infoPanel[*].cloudCodeFunction`       | String              | no       | -       | `getUserDetails`                                 | The Cloud Code Function which received the selected object in the data browser and returns the response to be displayed in the info panel.                                                                                            |
+| `apps.scripts`                         | Array&lt;Object&gt; | yes      | `[]`    | `[{ ... }, { ... }]`                             | The scripts that can be executed for that app.                                                                                                                                                                                        |
+| `apps.scripts.title`                   | String              | no       | -       | `'Delete User'`                                  | The title that will be displayed in the data browser context menu and the script run confirmation dialog.                                                                                                                             |
+| `apps.scripts.classes`                 | Array&lt;String&gt; | no       | -       | `['_User']`                                      | The classes of Parse Objects for which the scripts can be executed.                                                                                                                                                                   |
+| `apps.scripts.cloudCodeFunction`       | String              | no       | -       | `'deleteUser'`                                   | The name of the Parse Cloud Function to execute.                                                                                                                                                                                      |
+| `apps.scripts.executionBatchSize`      | Integer             | yes      | `1`     | `10`                                             | The batch size with which a script should be executed on all selected objects. For example, with 50 objects selected, a batch size of 10 means the script will run on 10 objects in parallel, running a total of 5 batches in serial. |
+| `apps.scripts.showConfirmationDialog`  | Bool                | yes      | `false` | `true`                                           | Is `true` if a confirmation dialog should be displayed before the script is executed, `false` if the script should be executed immediately.                                                                                           |
+| `apps.scripts.confirmationDialogStyle` | String              | yes      | `info`  | `critical`                                       | The style of the confirmation dialog. Valid values: `info` (blue style), `critical` (red style).                                                                                                                                      |
+| `apps.cloudConfigHistoryLimit`         | Integer             | yes      | `100`   | `100`                                            | The number of historic values that should be saved in the Cloud Config change history. Valid values: `0`...`Number.MAX_SAFE_INTEGER`.                                                                                                 |
 
 ### File
 
@@ -311,12 +366,143 @@ If you have classes with a lot of columns and you filter them often with the sam
           {
             "name": "email",
             "filterSortToTop": true
-          }          
+          }
         ]
       }
     }
 ]
 ```
+
+### Persistent Filters
+
+The filters you save in the data browser of Parse Dashboard are only available for the current dashboard user in the current browser session. To make filters permanently available for all dashboard users of an app, you can define filters in the `classPreference` setting.
+
+For example:
+
+```json
+"apps": [{
+  "classPreference": {
+    "_Role": {
+      "filters": [{
+        "name": "Filter Name",
+        "filter": [
+          {
+            "field": "objectId",
+            "constraint": "exists"
+          }
+        ]
+      }]
+    }
+  }
+}]
+```
+
+You can conveniently create a filter definition without having to write it by hand by first saving a filter in the data browser, then exporting the filter definition under *App Settings > Export Class Preferences*.
+
+### Scripts
+
+You can specify scripts to execute Cloud Functions with the `scripts` option:
+
+```json
+"apps": [
+  {
+    "scripts": [
+      {
+        "title": "Delete Account",
+        "classes": ["_User"],
+        "cloudCodeFunction": "deleteAccount",
+        "showConfirmationDialog": true,
+        "confirmationDialogStyle": "critical"
+      }
+    ]
+  }
+]
+```
+
+You can also specify custom fields with the `scrips` option:
+
+```json
+"apps": [
+  {
+    "scripts": [
+      {
+        "title": "Delete account",
+        "classes": [
+          {
+            "name": "_User",
+            "fields": [
+              { "name": "createdAt", "validator": "value => value > new Date(\"2025\")" }
+            ]
+          }
+        ],
+        "cloudCodeFunction": "deleteAccount"
+      }
+    ]
+  }
+]
+
+```
+
+
+Next, define the Cloud Function in Parse Server that will be called. The object that has been selected in the data browser will be made available as a request parameter:
+
+```js
+Parse.Cloud.define('deleteAccount', async (req) => {
+  req.params.object.set('deleted', true);
+  await req.params.object.save(null, {useMasterKey: true});
+}, {
+  requireMaster: true
+});
+```
+
+The field which the script was invoked on can be accessed by `selectedField`:
+
+```js
+Parse.Cloud.define('deleteAccount', async (req) => {
+  if (req.params.selectedField !== 'objectId') {
+    throw new Parse.Error(Parse.Error.SCRIPT_FAILED, 'Deleting accounts is only available on the objectId field.');
+  }
+  req.params.object.set('deleted', true);
+  await req.params.object.save(null, {useMasterKey: true});
+}, {
+  requireMaster: true
+});
+```
+
+⚠️ Depending on your Parse Server version you may need to set the Parse Server option `encodeParseObjectInCloudFunction` to `true` so that the selected object in the data browser is made available in the Cloud Function as an instance of `Parse.Object`. If the option is not set, is set to `false`, or you are using an older version of Parse Server, the object is made available as a plain JavaScript object and needs to be converted from a JSON object to a `Parse.Object` instance with `req.params.object = Parse.Object.fromJSON(req.params.object);`, before you can call any `Parse.Object` properties and methods on it.
+
+For older versions of Parse Server:
+
+<details>
+<summary>Parse Server &gt;=4.4.0 &lt;6.2.0</summary>
+
+```js
+Parse.Cloud.define('deleteAccount', async (req) => {
+  req.params.object = Parse.Object.fromJSON(req.params.object);
+  req.params.object.set('deleted', true);
+  await req.params.object.save(null, {useMasterKey: true});
+}, {
+  requireMaster: true
+});
+```
+
+</details>
+
+<details>
+<summary>Parse Server &gt;=2.1.4 &lt;4.4.0</summary>
+
+```js
+Parse.Cloud.define('deleteAccount', async (req) => {
+  if (!req.master || !req.params.object) {
+    throw 'Unauthorized';
+  }
+  req.params.object = Parse.Object.fromJSON(req.params.object);
+  req.params.object.set('deleted', true);
+  await req.params.object.save(null, {useMasterKey: true});
+});
+```
+
+</details>
 
 # Running as Express Middleware
 
@@ -401,7 +587,23 @@ var dashboard = new ParseDashboard({
 });
 ```
 
+### Security Checks
 
+You can view the security status of your Parse Server by enabling the dashboard option `enableSecurityChecks`, and visiting App Settings > Security.
+
+```javascript
+const dashboard = new ParseDashboard({
+  "apps": [
+    {
+      "serverURL": "http://localhost:1337/parse",
+      "appId": "myAppId",
+      "masterKey": "myMasterKey",
+      "appName": "MyApp"
+      "enableSecurityChecks": true
+    }
+  ],
+});
+```
 
 ### Configuring Basic Authentication
 You can configure your dashboard for Basic Authentication by adding usernames and passwords your `parse-dashboard-config.json` configuration file:
@@ -434,8 +636,7 @@ With MFA enabled, a user must provide a one-time password that is typically boun
 
 The user requires an authenticator app to generate the one-time password. These apps are provided by many 3rd parties and mostly for free.
 
-If you create a new user by running `parse-dashboard --createUser`, you will be  asked whether you want to enable MFA for the new user. To enable MFA for an existing user, 
-run `parse-dashboard --createMFA` to generate a `mfa` secret that you then add to the existing user configuration, for example:
+If you create a new user by running `parse-dashboard --createUser`, you will be  asked whether you want to enable MFA for the new user. To enable MFA for an existing user, run `parse-dashboard --createMFA` to generate a `mfa` secret that you then add to the existing user configuration, for example:
 
 ```json
 {
@@ -634,6 +835,324 @@ If you are not familiar with Docker, ``--port 8080`` will be passed in as argume
 
 # Features
 *(The following is not a complete list of features but a work in progress to build a comprehensive feature list.)*
+
+## Data Browser
+
+### Filters
+
+▶️ *Core > Browser > Filter*
+
+The filter dialog allows to add relational filter conditions based on other classes that have a pointer to the current class.
+
+For example, users in the `_User` class may have:
+
+- purchases in a `Purchase` class with a `_User` pointer field
+- transactions in a `Payment` class with a `_User` pointer field
+
+A relational filter allows you filter all users who:
+
+- purchased a specific item (in `Purchase` class)
+- payed with a specific payment method (in `Payment` class)
+
+To apply such a filter, simply go to the `_User` class and add the two required filter conditions with the `Purchase` and `Payment` classes.
+
+### Info Panel
+
+▶️ *Core > Browser > Show Panel / Hide Panel*
+
+The data browser offers an info panel that can display information related to the currently selected object in the data browser table. The info panel is made visible by clicking on the menu button *Show Panel* in the top right corner when browsing a class for which the info panel is configured in the dashboard options.
+
+The following example dashboard configuration shows an info panel for the `_User` class with the title `User Details`, by calling the Cloud Code Function `getUserDetails` and displaying the returned response.
+
+```json
+"apps": [
+  {
+    "infoPanel": [
+      {
+        "title": "User Details",
+        "classes": ["_User"],
+        "cloudCodeFunction": "getUserDetails"
+      }
+    ]
+  }
+]
+```
+
+The Cloud Code Function receives the selected object in the payload and returns a response that can include various items.
+
+#### Segments
+
+The info panel can contain multiple segments to display different groups of information.
+
+| Parameter                | Value  | Optional | Description                                                                                                                            |
+|--------------------------|--------|----------|----------------------------------------------------------------------------------------------------------------------------------------|
+| `segments`               | Array  | No       | An ordered array of segments, where each segment represents a distinct group of items to display.                                      |
+| `segments[i].title`      | String | No       | The title of the segment that will be displayed.                                                                                       |
+| `segments[i].items`      | Array  | No       | An ordered array of items within the segment. Each item can be of different types, such as text, key-value pairs, tables, images, etc. |
+| `segments[i].style`      | Object | Yes      | The CSS style definition for the segment.                                                                                              |
+| `segments[i].titleStyle` | Object | Yes      | The CSS style definition for the segment title.                                                                                        |
+
+Example:
+
+```json
+{
+  "panel": {
+    "segments": [
+      {
+        "title": "Purchases",
+        "style": { "backgroundColor": "lightgray", "font-size": "10px" },
+        "titleStyle": { "backgroundColor": "orange", "color": "white" },
+        "items": [
+          {
+            "type": "text",
+            "text": "This user has a high churn risk!"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+The items array can include various types of content such as text, key-value pairs, tables, images, videos, audios, and buttons. Each type offers a different way to display information within the info panel, allowing for a customizable and rich user experience. Below is a detailed explanation of each type.
+
+#### Text Item
+
+A simple text field.
+
+| Parameter | Value  | Optional | Description               |
+|-----------|--------|----------|---------------------------|
+| `type`    | String | No       | Must be `"text"`.         |
+| `text`    | String | No       | The text to display.      |
+| `style`   | Object | Yes      | The CSS style definition. |
+
+Example:
+
+```json
+{
+  "type": "text",
+  "text": "This user has a high churn risk!",
+  "style": { "backgroundColor": "red" },
+}
+```
+
+#### Key-Value Item
+
+A text item that consists of a key and a value. The value can optionally be linked to a URL.
+
+| Parameter       | Value   | Default     | Optional | Description                                                                                                                                                                                             |
+|-----------------|---------|-------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `type`          | String  | -           | No       | Must be `"keyValue"`.                                                                                                                                                                                   |
+| `key`           | String  | -           | No       | The key text to display.                                                                                                                                                                                |
+| `value`         | String  | -           | No       | The value text to display.                                                                                                                                                                              |
+| `url`           | String  | `undefined` | Yes      | The URL that will be opened in a new browser tab when clicking on the value text. It can be set to an absolute URL or a relative URL in which case the base URL is `<PROTOCOL>://<HOST>/<MOUNT_PATH>/`. |
+| `isRelativeUrl` | Boolean | `false`     | Yes      | Set this to `true` when linking to another dashboard page, in which case the base URL for the relative URL will be `<PROTOCOL>://<HOST>/<MOUNT_PATH>/apps/<APP_NAME>/`.                                 |
+| `style`         | Object  | -           | Yes      | The CSS style definition.                                                                                                                                                                               |
+
+Examples:
+
+```json
+{
+  "type": "keyValue",
+  "key": "Lifetime purchase value",
+  "value": "$10k",
+  "style": { "backgroundColor": "green" },
+}
+```
+
+```json
+{
+  "type": "keyValue",
+  "key": "Last purchase ID",
+  "value": "123",
+  "url": "https://example.com/purchaseDetails?purchaseId=123"
+}
+```
+
+```json
+{
+  "type": "keyValue",
+  "key": "Purchase",
+  "value": "123",
+  "url": "browser/Purchase",
+  "isRelativeUrl": true
+}
+```
+
+To navigate to a specific object using a relative URL, the query parameters must be URL encoded:
+
+```js
+const objectId = 'abc123';
+const className = 'Purchase';
+const query = [{ field: 'objectId', constraint: 'eq', compareTo: objectId }];
+const url = `browser/Purchase?filters=${JSON.stringify(query)}`;
+const item = {
+  type: 'keyValue',
+  key: 'Purchase',
+  value: objectId,
+  url,
+  isRelativeUrl: true
+}
+```
+
+#### Table Item
+
+A table with columns and rows to display data in a structured format.
+
+| Parameter         | Value  | Optional | Description                                                                      |
+|-------------------|--------|----------|----------------------------------------------------------------------------------|
+| `type`            | String | No       | Must be `"table"`.                                                               |
+| `columns`         | Array  | No       | The column definitions, including names and types.                               |
+| `columns[*].name` | String | No       | The name of the column to display.                                               |
+| `columns[*].type` | String | No       | The type of the column value (e.g., `"string"`, `"number"`).                     |
+| `rows`            | Array  | No       | The rows of data, where each row is an object containing values for each column. |
+| `style`           | Object | Yes      | The CSS style definition.                                                        |
+
+Example:
+
+```json
+{
+  "type": "table",
+  "columns": [
+    {
+      "name": "Name",
+      "type": "string"
+    },
+    {
+      "name": "Age",
+      "type": "number"
+    }
+  ],
+  "rows": [
+    {
+      "Name": "Alice",
+      "Age": 30
+    },
+    {
+      "Name": "Bob",
+      "Age": 40
+    }
+  ],
+  "style": { "backgroundColor": "lightGray" }
+}
+```
+
+#### Image Item
+
+An image to be displayed in the panel.
+
+| Parameter | Value  | Optional | Description                      |
+|-----------|--------|----------|----------------------------------|
+| `type`    | String | No       | Must be `"image"`.               |
+| `url`     | String | No       | The URL of the image to display. |
+| `style`   | Object | Yes      | The CSS style definition.        |
+
+Example:
+
+```json
+{
+  "type": "image",
+  "url": "https://example.com/images?purchaseId=012345",
+  "style": { "backgroundColor": "white" }
+}
+```
+
+#### Video Item
+
+A video to be displayed in the panel.
+
+| Parameter | Value  | Optional | Description                      |
+|-----------|--------|----------|----------------------------------|
+| `type`    | String | No       | Must be `"video"`.               |
+| `url`     | String | No       | The URL of the video to display. |
+| `style`   | Object | Yes      | The CSS style definition.        |
+
+Example:
+
+```json
+{
+  "type": "video",
+  "url": "https://example.com/video.mp4",
+  "style": { "backgroundColor": "white" }
+}
+```
+
+#### Audio Item
+
+An audio file to be played in the panel.
+
+| Parameter | Value  | Optional | Description                   |
+|-----------|--------|----------|-------------------------------|
+| `type`    | String | No       | Must be `"audio"`.            |
+| `url`     | String | No       | The URL of the audio to play. |
+| `style`   | Object | Yes      | The CSS style definition.     |
+
+Example:
+
+```json
+{
+  "type": "audio",
+  "url": "https://example.com/audio.mp3",
+  "style": { "backgroundColor": "white" }
+}
+```
+
+#### Button Item
+
+A button that triggers an action when clicked.
+
+| Parameter        | Value  | Optional | Description                                             |
+|------------------|--------|----------|---------------------------------------------------------|
+| `type`           | String | No       | Must be `"button"`.                                     |
+| `text`           | String | No       | The text to display on the button.                      |
+| `action`         | Object | No       | The action to be performed when the button is clicked.  |
+| `action.url`     | String | No       | The URL to which the request should be sent.            |
+| `action.method`  | String | No       | The HTTP method to use for the action (e.g., `"POST"`). |
+| `action.headers` | Object | Yes      | Optional headers to include in the request.             |
+| `action.body`    | Object | Yes      | The body of the request in JSON format.                 |
+| `style`          | Object | Yes      | The CSS style definition.                               |
+
+Example:
+
+```json
+{
+  "type": "button",
+  "text": "Click me!",
+  "action": {
+    "url": "https://api.example.com/click",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "key": "value"
+    }
+  },
+  "style": { "backgroundColor": "pink", "color": "white" }
+}
+```
+
+#### Panel Item
+
+A sub-panel whose data is loaded on-demand by expanding the item.
+
+| Parameter           | Value  | Optional | Description                                                                                                                                       |
+|---------------------|--------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| `type`              | String | No       | Must be `"infoPanel"`.                                                                                                                            |
+| `title`             | String | No       | The title to display in the expandable headline.                                                                                                  |
+| `cloudCodeFunction` | String | No       | The Cloud Code Function to call which receives the selected object in the data browser and returns the response to be displayed in the sub-panel. |
+| `style`             | Object | Yes      | The CSS style definition.                                                                                                                         |
+
+Example:
+
+```json
+{
+  "type": "panel",
+  "title": "Purchase History",
+  "cloudCodeFunction": "getUserPurchaseHistory",
+  "style": { "backgroundColor": "lightGray" },
+}
+```
 
 ## Browse as User
 

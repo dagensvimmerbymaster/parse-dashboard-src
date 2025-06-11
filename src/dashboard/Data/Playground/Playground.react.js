@@ -2,16 +2,21 @@ import React, { Component } from 'react';
 import ReactJson from 'react-json-view';
 import Parse from 'parse';
 
-import PropTypes from 'lib/PropTypes';
-import ParseApp from 'lib/ParseApp';
 import CodeEditor from 'components/CodeEditor/CodeEditor.react';
 import Button from 'components/Button/Button.react';
 import SaveButton from 'components/SaveButton/SaveButton.react';
 import Toolbar from 'components/Toolbar/Toolbar.react';
+import { CurrentApp } from 'context/currentApp';
 
 import styles from './Playground.scss';
 
+const DEFAULT_CODE_EDITOR_VALUE = `const myObj = new Parse.Object('MyClass');
+myObj.set('myField', 'Hello World!')
+await myObj.save();
+console.log(myObj);`;
+
 export default class Playground extends Component {
+  static contextType = CurrentApp;
   constructor() {
     super();
     this.section = 'Core';
@@ -21,7 +26,7 @@ export default class Playground extends Component {
       results: [],
       running: false,
       saving: false,
-      savingState: SaveButton.States.WAITING
+      savingState: SaveButton.States.WAITING,
     };
   }
 
@@ -40,9 +45,9 @@ export default class Playground extends Component {
                   ? arg.map(this.getParseObjectAttr)
                   : this.getParseObjectAttr(arg)
                 : { result: arg },
-            name: 'Log'
-          }))
-        ]
+            name: 'Log',
+          })),
+        ],
       }));
 
       originalConsoleLog.apply(console, args);
@@ -56,9 +61,9 @@ export default class Playground extends Component {
               arg instanceof Error
                 ? { message: arg.message, name: arg.name, stack: arg.stack }
                 : { result: arg },
-            name: 'Error'
-          }))
-        ]
+            name: 'Error',
+          })),
+        ],
       }));
 
       originalConsoleError.apply(console, args);
@@ -71,16 +76,12 @@ export default class Playground extends Component {
     const [originalConsoleLog, originalConsoleError] = this.overrideConsole();
 
     try {
-      const {
-        currentApp: { applicationId, masterKey, serverURL, javascriptKey }
-      } = this.context;
+      const { applicationId, masterKey, serverURL, javascriptKey } = this.context;
       const originalCode = this.editor.value;
 
       const finalCode = `return (async function(){
         try{
-          Parse.initialize('${applicationId}', ${
-        javascriptKey ? `'${javascriptKey}'` : undefined
-      });
+          Parse.initialize('${applicationId}', ${javascriptKey ? `'${javascriptKey}'` : undefined});
           Parse.masterKey = '${masterKey}';
           Parse.serverUrl = '${serverURL}';
 
@@ -110,13 +111,10 @@ export default class Playground extends Component {
       window.localStorage.setItem(this.localKey, code);
       this.setState({
         saving: false,
-        savingState: SaveButton.States.SUCCEEDED
+        savingState: SaveButton.States.SUCCEEDED,
       });
 
-      setTimeout(
-        () => this.setState({ savingState: SaveButton.States.WAITING }),
-        3000
-      );
+      setTimeout(() => this.setState({ savingState: SaveButton.States.WAITING }), 3000);
     } catch (e) {
       console.error(e);
       this.setState({ saving: false, savingState: SaveButton.States.FAILED });
@@ -148,10 +146,7 @@ export default class Playground extends Component {
         <Toolbar section={this.section} subsection={this.subsection} />
         <div style={{ minHeight: '25vh' }}>
           <CodeEditor
-            placeHolder={`const myObj = new Parse.Object('MyClass');
-myObj.set('myField', 'Hello World!')
-await myObj.save();
-console.log(myObj);`}
+            defaultValue={DEFAULT_CODE_EDITOR_VALUE}
             ref={editor => (this.editor = editor)}
           />
           <div className={styles['console-ctn']}>
@@ -197,8 +192,3 @@ console.log(myObj);`}
     );
   }
 }
-
-Playground.contextTypes = {
-  generatePath: PropTypes.func,
-  currentApp: PropTypes.instanceOf(ParseApp)
-};

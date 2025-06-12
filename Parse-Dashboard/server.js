@@ -5,8 +5,7 @@
  * This source code is licensed under the license found in the LICENSE file in
  * the root directory of this source tree.
  */
-// Command line tool for npm start
-'use strict'
+'use strict';
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
@@ -23,7 +22,7 @@ module.exports = (options) => {
   const dev = options.dev;
 
   if (trustProxy && allowInsecureHTTP) {
-    console.log('Set only trustProxy *or* allowInsecureHTTP, not both.  Only one is needed to handle being behind a proxy.');
+    console.log('Set only trustProxy *or* allowInsecureHTTP, not both. Only one is needed to handle being behind a proxy.');
     process.exit(-1);
   }
 
@@ -41,20 +40,15 @@ module.exports = (options) => {
   const configSSLCert = options.sslCert || process.env.PARSE_DASHBOARD_SSL_CERT;
 
   function handleSIGs(server) {
-    const signals = {
-      'SIGINT': 2,
-      'SIGTERM': 15
-    };
+    const signals = { 'SIGINT': 2, 'SIGTERM': 15 };
     function shutdown(signal, value) {
-      server.close(function () {
+      server.close(() => {
         console.log('server stopped by ' + signal);
         process.exit(128 + value);
       });
     }
-    Object.keys(signals).forEach(function (signal) {
-      process.on(signal, function () {
-        shutdown(signal, signals[signal]);
-      });
+    Object.keys(signals).forEach(signal => {
+      process.on(signal, () => shutdown(signal, signals[signal]));
     });
   }
 
@@ -62,26 +56,22 @@ module.exports = (options) => {
     if (configServerURL && configMasterKey && configAppId) {
       configFromCLI = {
         data: {
-          apps: [
-            {
-              appId: configAppId,
-              serverURL: configServerURL,
-              masterKey: configMasterKey,
-              appName: configAppName,
-            },
-          ]
+          apps: [{
+            appId: configAppId,
+            serverURL: configServerURL,
+            masterKey: configMasterKey,
+            appName: configAppName,
+          }]
         }
       };
       if (configGraphQLServerURL) {
         configFromCLI.data.apps[0].graphQLServerURL = configGraphQLServerURL;
       }
       if (configUserId && configUserPassword) {
-        configFromCLI.data.users = [
-          {
-            user: configUserId,
-            pass: configUserPassword,
-          }
-        ];
+        configFromCLI.data.users = [{
+          user: configUserId,
+          pass: configUserPassword,
+        }];
       }
     } else if (!configServerURL && !configMasterKey && !configAppName) {
       configFile = path.join(__dirname, 'parse-dashboard-config.json');
@@ -93,7 +83,7 @@ module.exports = (options) => {
   } else {
     configFile = options.config;
     if (options.appId || options.serverURL || options.masterKey || options.appName || options.graphQLServerURL) {
-      console.log('You must provide either a config file or other CLI options (appName, appId, masterKey, serverURL, and graphQLServerURL); not both.');
+      console.log('You must provide either a config file or other CLI options; not both.');
       process.exit(3);
     }
   }
@@ -107,64 +97,52 @@ module.exports = (options) => {
       };
       configFilePath = path.dirname(configFile);
     } catch (error) {
-      if (error instanceof SyntaxError) {
-        console.log('Your config file contains invalid JSON. Exiting.');
-        process.exit(1);
-      } else if (error.code === 'ENOENT') {
-        if (explicitConfigFileProvided) {
-          console.log('Your config file is missing. Exiting.');
-          process.exit(2);
-        } else {
-          console.log('You must provide either a config file or required CLI options (app ID, Master Key, and server URL); not both.');
-          process.exit(3);
-        }
-      } else {
-        console.log('There was a problem with your config. Exiting.');
-        process.exit(-1);
-      }
+      console.error('Config load error:', error.message);
+      process.exit(error.code === 'ENOENT' ? 2 : 1);
     }
   } else if (configFromCLI) {
     config = configFromCLI;
   } else {
-    //Failed to load default config file.
-    console.log('You must provide either a config file or an app ID, Master Key, and server URL. See parse-dashboard --help for details.');
+    console.log('You must provide either a config file or CLI options. See parse-dashboard --help for details.');
     process.exit(4);
   }
 
   config.data.apps.forEach(app => {
-    if (!app.appName) {
-      app.appName = app.appId;
-    }
+    if (!app.appName) app.appName = app.appId;
   });
-
-  if (config.data.iconsFolder && configFilePath) {
-    config.data.iconsFolder = path.join(configFilePath, config.data.iconsFolder);
-  }
 
   const app = express();
 
-  if (allowInsecureHTTP || trustProxy || dev) {app.enable('trust proxy');}
+  // Serve static icons if defined
+  if (config.data.iconsFolder) {
+    const resolvedIconsPath = path.resolve(__dirname, '../', config.data.iconsFolder);
+    if (fs.existsSync(resolvedIconsPath)) {
+      app.use('/appicons', express.static(resolvedIconsPath));
+    } else {
+      console.warn(`Iconsfolder at path: ${resolvedIconsPath} not found!`);
+    }
+  }
+
+  if (allowInsecureHTTP || trustProxy || dev) {
+    app.enable('trust proxy');
+  }
 
   config.data.trustProxy = trustProxy;
   const dashboardOptions = { allowInsecureHTTP, cookieSessionSecret, dev, cookieSessionMaxAge };
   app.use(mountPath, parseDashboard(config.data, dashboardOptions));
+
   let server;
-  if(!configSSLKey || !configSSLCert){
-    // Start the server.
-    server = app.listen(port, host, function () {
+  if (!configSSLKey || !configSSLCert) {
+    server = app.listen(port, host, () => {
       console.log(`The dashboard is now available at http://${server.address().address}:${server.address().port}${mountPath}`);
     });
   } else {
-    // Start the server using SSL.
     const privateKey = fs.readFileSync(configSSLKey);
     const certificate = fs.readFileSync(configSSLCert);
-
-    server = require('https').createServer({
-      key: privateKey,
-      cert: certificate
-    }, app).listen(port, host, function () {
+    server = require('https').createServer({ key: privateKey, cert: certificate }, app).listen(port, host, () => {
       console.log(`The dashboard is now available at https://${server.address().address}:${server.address().port}${mountPath}`);
     });
   }
+
   handleSIGs(server);
 };

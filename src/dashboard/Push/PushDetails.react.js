@@ -528,180 +528,117 @@ class PushDetails extends DashboardView {
     };
   }
 
-  renderPushRates(experimentInfo) {
-    const pushDetails = this.state.pushDetails;
-    if (!pushDetails.id) {
-      return null;
-    }
-    const launchChoice = pushDetails.launch_choice;
-    const isMessageType = pushDetails.exp_type === 'message';
-    let res = null;
-    let prevLaunchGroup = null;
-    const alert = getMessage(pushDetails.get('payload'));
+renderPushRates(experimentInfo) {
+  const pushDetails = this.state.pushDetails;
+  if (!pushDetails.id) {
+    return null;
+  }
+  const launchChoice = pushDetails.launch_choice;
+  const isMessageType = pushDetails.exp_type === 'message';
+  let res = null;
+  let prevLaunchGroup = null;
+  const alert = getMessage(pushDetails.get('payload'));
 
-    if (pushDetails && pushDetails.experiment_push_id) {
-      prevLaunchGroup = (
-        <div className={styles.header}>
-          <div className={styles.headline}>
-            This push is the Launch Group for a previous{' '}
-            <Link to={getPushDetailUrl(this.context, pushDetails.experiment_push_id)}>
-              experiment
-            </Link>
-            .
-          </div>
+  if (pushDetails && pushDetails.experiment_push_id) {
+    prevLaunchGroup = (
+      <div className={styles.header}>
+        <div className={styles.headline}>
+          This push is the Launch Group for a previous{' '}
+          <Link to={getPushDetailUrl(this.context, pushDetails.experiment_push_id)}>
+            experiment
+          </Link>
+          .
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
-    if (pushDetails.get('status') === 'scheduled') {
-      res = (
-        <div>
-          <div className={styles.groupHeader}>
-            {getExperimentPartial(pushDetails, 'a', isMessageType, {
-              color: this.state.groupColorA,
-            })}
-            {getExperimentPartial(pushDetails, 'b', isMessageType, {
-              color: this.state.groupColorB,
-            })}
+  if (pushDetails.get('status') === 'scheduled') {
+    res = (
+      <div>
+        <div className={styles.groupHeader}>
+          {getExperimentPartial(pushDetails, 'a', isMessageType, {
+            color: this.state.groupColorA,
+          })}
+          {getExperimentPartial(pushDetails, 'b', isMessageType, {
+            color: this.state.groupColorB,
+          })}
+        </div>
+        {!isMessageType ? (
+          <div className={[styles.header, styles.messageHeader].join(' ')}>
+            <div className={styles.headerTitle}>MESSAGE SENT</div>
+            <div className={styles.headline}>{getMessage(pushDetails.group_a.payload)}</div>
           </div>
-          {!isMessageType ? (
-            <div className={[styles.header, styles.messageHeader].join(' ')}>
-              <div className={styles.headerTitle}>MESSAGE SENT</div>
-              <div className={styles.headline}>{getMessage(pushDetails.group_a.payload)}</div>
-            </div>
-          ) : null}
-          {prevLaunchGroup}
-          {experimentInfo}
-          <div className={styles.groupA}>
-            <div className={styles.openRateTitle} style={{ color: this.state.groupColorA }}>
-              {this.state.groupStatusA}
-            </div>
-            <PushOpenRate
-              numOpened={pushDetails.group_a.push_opens}
-              numSent={pushDetails.group_a.push_sends}
-              isWinner={launchChoice === 'A'}
-              customColor={this.state.groupColorA}
-            />
+        ) : null}
+        <div className={styles.groupA}>
+          <div className={styles.openRateTitle} style={{ color: this.state.groupColorA }}>
+            {this.state.groupStatusA}
           </div>
-          <div className={styles.groupB}>
-            <div className={styles.openRateTitle} style={{ color: this.state.groupColorB }}>
-              {this.state.groupStatusB}
-            </div>
-            <PushOpenRate
-              numOpened={pushDetails.group_b.push_opens}
-              numSent={pushDetails.group_b.push_sends}
-              isWinner={launchChoice === 'B'}
-              customColor={this.state.groupColorB}
-            />
+          <PushOpenRate
+            numOpened={pushDetails.group_a.push_opens}
+            numSent={pushDetails.group_a.push_sends}
+            isWinner={launchChoice === 'A'}
+            customColor={this.state.groupColorA}
+          />
+        </div>
+        <div className={styles.groupB}>
+          <div className={styles.openRateTitle} style={{ color: this.state.groupColorB }}>
+            {this.state.groupStatusB}
           </div>
-          <Button
+          <PushOpenRate
+            numOpened={pushDetails.group_b.push_opens}
+            numSent={pushDetails.group_b.push_sends}
+            isWinner={launchChoice === 'B'}
+            customColor={this.state.groupColorB}
+          />
+        </div>
+        <Button
           value={'Delete this push'}
           onClick={ async () => {
             let query = new Parse.Query('_PushStatus');
-            var thisPush = await query.get(this.props.params.pushId, { useMasterKey: true })
+            var thisPush = await query.get(this.props.params.pushId, { useMasterKey: true });
             await thisPush.destroy({ useMasterKey: true });
-            history.push(getPushListUrl(this.context))
-          }} />
+            history.push(getPushListUrl(this.context));
+          }}
+        />
+        {prevLaunchGroup}
+        {experimentInfo}
+        <PushOpenRate
+          numOpened={pushDetails.get('numOpened') || 0}
+          numSent={pushDetails.get('numSent')}
+          customColor={this.state.standardColor}
+        />
+      </div>
+    );
+  } else {
+    res = (
+      <div>
+        <div className={styles.groupHeader}>
+          <div className={styles.headerTitle}>MESSAGE SENT</div>
+          {typeof alert === 'object' ? (
+            <div>
+              <div className={styles.headline}>{alert.title}</div>
+              <div className={styles.headline}>{alert.body}</div>
+            </div>
+          ) : (
+            <div className={styles.headline}>{alert}</div>
+          )}
+          <div className={styles.subline}>
+            {getSentInfo(pushDetails.get('pushTime'), pushDetails.get('expiration'))}
+          </div>
         </div>
         {prevLaunchGroup}
         {experimentInfo}
         <PushOpenRate
-            numOpened={pushDetails.get('numOpened') || 0}
-            numSent={pushDetails.get('numSent')}
-            customColor={this.state.standardColor} />
+          numOpened={pushDetails.get('numOpened') || 0}
+          numSent={pushDetails.get('numSent')}
+          customColor={this.state.standardColor}
+        />
       </div>
-      )
-    } else {
-      res = (
-        <div>
-          <div className={styles.groupHeader}>
-            <div className={styles.headerTitle}>MESSAGE SENT</div>
-            {typeof alert === 'object' ? (
-              <div>
-                <div className={styles.headline}>{alert.title}</div>
-                <div className={styles.headline}>{alert.body}</div>
-              </div>
-            ) : (
-              <div className={styles.headline}>{alert}</div>
-            )}
-            <div className={styles.subline}>
-              {getSentInfo(pushDetails.get('pushTime'), pushDetails.get('expiration'))}
-            </div>
-          </div>
-          {prevLaunchGroup}
-          {experimentInfo}
-          <PushOpenRate
-            numOpened={pushDetails.get('numOpened') || 0}
-            numSent={pushDetails.get('numSent')}
-            customColor={this.state.standardColor}
-          />
-        </div>
-      );
-    }
-    // if (pushDetails.is_exp) {
-    //   res = (
-    //     <div>
-    //       <div className={styles.groupHeader}>
-    //         {getExperimentPartial(pushDetails, 'a', isMessageType, { color: this.state.groupColorA })}
-    //         {getExperimentPartial(pushDetails, 'b', isMessageType, { color: this.state.groupColorB })}
-    //       </div>
-    //       {
-    //         !isMessageType ?
-    //           <div className={[styles.header, styles.messageHeader].join(' ')}>
-    //             <div className={styles.headerTitle}>MESSAGE SENT</div>
-    //             <div className={styles.headline}>{getMessage(pushDetails.group_a.payload)}</div>
-    //           </div> :
-    //           null
-    //       }
-    //       {prevLaunchGroup}
-    //       {experimentInfo}
-    //       <div className={styles.groupA}>
-    //         <div className={styles.openRateTitle} style={{ color: this.state.groupColorA }}>{this.state.groupStatusA}</div>
-    //         <PushOpenRate
-    //           numOpened={pushDetails.group_a.push_opens}
-    //           numSent={pushDetails.group_a.push_sends}
-    //           isWinner={launchChoice === 'A'}
-    //           customColor={this.state.groupColorA} />
-    //       </div>
-    //       <div className={styles.groupB}>
-    //         <div className={styles.openRateTitle} style={{ color: this.state.groupColorB }}>{this.state.groupStatusB}</div>
-    //         <PushOpenRate
-    //           numOpened={pushDetails.group_b.push_opens}
-    //           numSent={pushDetails.group_b.push_sends}
-    //           isWinner={launchChoice === 'B'}
-    //           customColor={this.state.groupColorB} />
-    //       </div>
-    //     </div>
-    //   );
-    // } else {
-    //   res = (
-    //     <div>
-    //       <div className={styles.groupHeader}>
-    //         <div className={styles.headerTitle}>MESSAGE SENT</div>
-		// 					{
-		// 						(typeof alert === 'object') ?
-		// 							<div>
-		// 								<div className={styles.headline}>{alert.title}</div>
-		// 								<div className={styles.headline}>{alert.body}</div>
-		// 							</div>:
-		// 							<div className={styles.headline}>{alert}</div>
-		// 					}
-    //         <div className={styles.subline}>
-    //           {getSentInfo(pushDetails.get('pushTime'), pushDetails.get('expiration'))}
-    //         </div>
-    //       </div>
-    //       {prevLaunchGroup}
-    //       {experimentInfo}
-    //       <PushOpenRate
-    //         numOpened={pushDetails.get('numOpened') || 0}
-    //         numSent={pushDetails.get('numSent')}
-    //         customColor={this.state.standardColor} />
-    //     </div>
-    //   );
-    // }
-
-    return res;
+    );
   }
+  return res;
+}
 
   renderAnalytics() {
     if (Object.keys(this.state.chartData).length > 0) {

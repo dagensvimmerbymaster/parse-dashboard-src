@@ -4,7 +4,7 @@
       "serverURL": "https://dagensvimmerby.herokuapp.com/parse",
       "appId": "id-FAoIJ78ValGFwYdBWfxch7Fm",
       "masterKey": "key-8uNA4ZslCgVoqFeuy5epBntj",
-      "appName": "Dagens Vimmerby",
+      "appName": "DagensVimmerby",
       "iconName": "dagensvimmerby.png",
       "production": true
     },
